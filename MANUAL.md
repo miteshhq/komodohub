@@ -18,7 +18,7 @@ SQLite is a lightweight, file-based database that does not require additional se
 
 Create a `.env` file in the project root directory and add the following configuration:
 
-```
+```env
 SESSION_SECRET=your-secret-key-here
 DATABASE_URL=sqlite:///database.db
 ADMIN_PASS=adminkomodo

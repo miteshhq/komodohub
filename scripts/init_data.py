@@ -26,6 +26,17 @@ def init_data():
         student.set_password("password123")
         db.session.add(student)
 
+    # Create member separately
+    member = User.query.filter_by(email="member@komodohub.org").first()
+    if not member:
+        member = User(
+            username="TestMember",
+            email="member@komodohub.org",
+            role="member"
+        )
+        member.set_password("password123")
+        db.session.add(member)
+
     # Create admin separately
     admin = User.query.filter_by(email="admin@komodohub.org").first()
     if not admin:

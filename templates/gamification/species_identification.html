@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Species Identification Challenge{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Species Identification Challenge</h1>
+            <p class="lead">Test your knowledge of wildlife species</p>
+        </div>
+    </div>
+
+    {% if challenge %}
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h5 class="card-title mb-1">{{ challenge.species.name }}</h5>
+                    <span class="badge bg-{{ {'easy': 'success', 'medium': 'warning', 'hard': 'danger'}[challenge.difficulty] }}">
+                        {{ challenge.difficulty|title }}
+                    </span>
+                    <span class="badge bg-primary ms-2">{{ challenge.points }} points</span>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <p class="fw-bold">Question:</p>
+                <p>{{ challenge.question_text }}</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('gamification.submit_identification') }}">
+                <input type="hidden" name="challenge_id" value="{{ challenge.id }}">
+                {{ form.hidden_tag() }}
+                
+                <div class="options mb-4">
+                    {% set options = (wrong_options + [challenge.correct_answer])|random %}
+                    {% for option in options %}
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="answer" 
+                               id="option{{ loop.index }}" value="{{ option }}" required>
+                        <label class="form-check-label" for="option{{ loop.index }}">
+                            {{ option }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if challenge.hint %}
+                <div class="mb-4">
+                    <button type="button" class="btn btn-outline-info btn-sm" 
+                            onclick="showHint()" id="hintBtn">
+                        <i class="fas fa-lightbulb me-1"></i>Show Hint
+                    </button>
+                    <div id="hintText" class="alert alert-info mt-2 d-none">
+                        {{ challenge.hint }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <button type="submit" class="btn btn-primary">
+                    Submit Answer
+                </button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        No new challenges available at the moment. Please try again later.
+    </div>
+    {% endif %}
+
+    <!-- Progress Section -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title">Your Progress</h5>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="border rounded p-3 text-center">
+                        <h6 class="mb-2">Total Attempts</h6>
+                        <h3>{{ stats.total_attempts }}</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded p-3 text-center">
+                        <h6 class="mb-2">Correct Answers</h6>
+                        <h3 class="text-success">{{ stats.correct_answers }}</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded p-3 text-center">
+                        <h6 class="mb-2">Points Earned</h6>
+                        <h3 class="text-primary">{{ stats.points_earned }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showHint() {
+    document.getElementById('hintText').classList.remove('d-none');
+    document.getElementById('hintBtn').classList.add('d-none');
+}
+</script>
+
+<style>
+.options {
+    max-width: 600px;
+}
+
+.form-check {
+    padding: 1rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.form-check:hover {
+    background-color: var(--bs-light);
+    cursor: pointer;
+}
+
+.form-check-input:checked ~ .form-check-label {
+    font-weight: bold;
+}
+</style>
+{% endblock %}

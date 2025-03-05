@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Species Quiz{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-paw me-2 text-forest"></i>Species Quiz</h2>
+            <p class="lead">Test your knowledge about endangered species!</p>
+        </div>
+    </div>
+
+    <div class="quiz-container">
+        <div class="card quiz-card">
+            <div class="card-body">
+                <div class="progress mb-4" style="height: 8px;">
+                    <div class="progress-bar bg-forest" role="progressbar" style="width: 0%"></div>
+                </div>
+
+                <div id="loadingIndicator" class="text-center py-5">
+                    <div class="spinner-border text-forest" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+
+                <div id="question-container">
+                    <h4 id="question-text" class="mb-4 question-text">Loading question...</h4>
+
+                    <div id="options-container" class="d-grid gap-3">
+                        <!-- Options will be dynamically inserted here -->
+                    </div>
+                </div>
+
+                <div id="result-container" class="mt-4 d-none">
+                    <div class="alert" role="alert">
+                        <h5 class="alert-heading mb-2 d-flex align-items-center">
+                            <i class="fas me-2"></i>
+                            <span></span>
+                        </h5>
+                        <p class="mb-0"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <span class="score-display">Score: <span class="score">0</span>/10</span>
+                <div>
+                    <button id="next-button" class="btn btn-forest d-none">
+                        Next Question <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                    <button id="finish-button" class="btn btn-success d-none">
+                        Finish Quiz <i class="fas fa-check ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.quiz-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.question-text {
+    color: var(--heading-color);
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.quiz-option {
+    transition: all var(--transition-speed) ease;
+    padding: 1rem 1.25rem;
+    text-align: left;
+    font-size: 1.1rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.quiz-option:not([disabled]):hover {
+    transform: translateX(10px);
+    border-color: var(--color-forest);
+    background: var(--hover-bg);
+}
+
+.quiz-option.correct {
+    background-color: rgba(var(--bs-success-rgb), 0.1) !important;
+    border-color: var(--bs-success) !important;
+    color: var(--bs-success) !important;
+}
+
+.quiz-option.incorrect {
+    background-color: rgba(var(--bs-danger-rgb), 0.1) !important;
+    border-color: var(--bs-danger) !important;
+    color: var(--bs-danger) !important;
+}
+
+.alert {
+    background: var(--section-bg);
+    border: 1px solid var(--border-color);
+}
+
+.alert.alert-success {
+    border-left: 4px solid var(--bs-success);
+}
+
+.alert.alert-danger {
+    border-left: 4px solid var(--bs-danger);
+}
+
+.score-display {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.progress-bar {
+    transition: width 0.3s ease;
+}
+
+/* Quiz completion styles */
+.completion-message {
+    text-align: center;
+    padding: 2rem;
+}
+
+.completion-message .display-4 {
+    color: var(--color-forest);
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+}
+
+.completion-message .lead {
+    color: var(--text-muted);
+}
+</style>
+
+<script>
+let currentQuestion = 0;
+let score = 0;
+
+function loadQuestion() {
+    const questionContainer = document.getElementById('question-container');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const resultContainer = document.getElementById('result-container');
+
+    loadingIndicator.style.display = 'block';
+    questionContainer.style.opacity = '0';
+    resultContainer.classList.add('d-none');
+
+    fetch('{{ url_for("games.get_quiz_question") }}')
+        .then(response => response.json())
+        .then(data => {
+            const optionsContainer = document.getElementById('options-container');
+
+            document.getElementById('question-text').textContent = data.question;
+            optionsContainer.innerHTML = '';
+
+            data.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'btn quiz-option';
+                button.textContent = option;
+                button.onclick = () => selectAnswer(index, data.correct, data.explanation);
+                optionsContainer.appendChild(button);
+            });
+
+            loadingIndicator.style.display = 'none';
+            questionContainer.style.opacity = '1';
+        });
+}
+
+function selectAnswer(selected, correct, explanation) {
+    const options = document.querySelectorAll('.quiz-option');
+    options.forEach(option => option.disabled = true);
+
+    options[selected].classList.add(selected === correct ? 'correct' : 'incorrect');
+    if (selected !== correct) {
+        options[correct].classList.add('correct');
+    }
+
+    const resultContainer = document.getElementById('result-container');
+    const alert = resultContainer.querySelector('.alert');
+    const icon = alert.querySelector('.alert-heading i');
+    const heading = alert.querySelector('.alert-heading span');
+    const explanation_text = alert.querySelector('p');
+
+    if (selected === correct) {
+        score++;
+        alert.className = 'alert alert-success';
+        icon.className = 'fas fa-check-circle me-2';
+        heading.textContent = 'Correct!';
+    } else {
+        alert.className = 'alert alert-danger';
+        icon.className = 'fas fa-times-circle me-2';
+        heading.textContent = 'Incorrect';
+    }
+    explanation_text.textContent = explanation;
+    resultContainer.classList.remove('d-none');
+
+    document.getElementById('next-button').classList.remove('d-none');
+    updateProgress();
+}
+
+function updateProgress() {
+    currentQuestion++;
+    const progress = (currentQuestion / 10) * 100;
+    document.querySelector('.progress-bar').style.width = `${progress}%`;
+    document.querySelector('.score').textContent = score;
+
+    if (currentQuestion >= 10) {
+        document.getElementById('next-button').classList.add('d-none');
+        document.getElementById('finish-button').classList.remove('d-none');
+    }
+}
+
+function nextQuestion() {
+    document.getElementById('result-container').classList.add('d-none');
+    document.getElementById('next-button').classList.add('d-none');
+    loadQuestion();
+}
+
+document.getElementById('next-button').onclick = nextQuestion;
+document.getElementById('finish-button').onclick = () => {
+    const percentage = (score / 10) * 100;
+    document.getElementById('question-container').innerHTML = `
+        <div class="completion-message">
+            <h3 class="mb-4">Quiz Complete!</h3>
+            <p class="display-4 mb-3">${score} / 10</p>
+            <p class="lead mb-4">You scored ${percentage}%</p>
+            <a href="{{ url_for('games.species_quiz') }}" class="btn btn-forest">
+                <i class="fas fa-redo me-2"></i>Try Again
+            </a>
+        </div>
+    `;
+};
+
+// Start the quiz when the page loads
+document.addEventListener('DOMContentLoaded', loadQuestion);
+</script>
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}My Species Sightings{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-binoculars me-2"></i>My Species Sightings</h2>
+            <a href="{{ url_for('species.list') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Species List
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if sightings %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="list-group">
+                    {% for sighting in sightings %}
+                    <div class="list-group-item hover-shadow mb-3 rounded">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h5 class="mb-1">{{ sighting.species.name }}</h5>
+                                <div class="mb-3">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-map-marker-alt me-2 text-forest"></i>
+                                        <span>{{ sighting.location }}</span>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-calendar me-2 text-forest"></i>
+                                        <span>{{ sighting.sighting_date.strftime('%B %d, %Y') }}</span>
+                                    </div>
+                                    {% if sighting.description %}
+                                    <div class="d-flex align-items-start mt-3">
+                                        <i class="fas fa-comment-alt me-2 text-forest mt-1"></i>
+                                        <p class="mb-0">{{ sighting.description }}</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-clock me-2"></i>Reported on {{ sighting.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                </small>
+                            </div>
+                            <div class="ms-4">
+                                <span class="badge bg-{{ 'success' if sighting.status == 'verified' 
+                                                    else 'warning' if sighting.status == 'pending'
+                                                    else 'danger' }} rounded-pill">
+                                    {{ sighting.status|title }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>You haven't reported any species sightings yet.
+    <a href="{{ url_for('species.list') }}" class="alert-link">
+        Go to the species list to report a sighting.
+    </a>
+</div>
+{% endif %}
+
+<style>
+.hover-shadow {
+    transition: all var(--transition-speed) ease;
+}
+.hover-shadow:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+.text-forest {
+    color: var(--color-forest);
+}
+.badge {
+    font-size: 0.85rem;
+    padding: 0.5em 1em;
+}
+
+/* Light mode enhancements */
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+}
+
+.list-group-item {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.info-item {
+    color: var(--text-primary);
+}
+
+.alert {
+    background: var(--section-bg);
+    border: 1px solid var(--border-color);
+}
+
+.alert-link {
+    color: var(--color-forest);
+}
+
+.alert-link:hover {
+    color: var(--color-moss);
+}
+</style>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Customize Profile{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Customize Your Profile</h2>
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            <div class="text-center mb-3">
+                                <img src="{{ url_for('static', filename='avatars/' + current_user.avatar) }}" 
+                                     class="rounded-circle" alt="Current Avatar" style="width: 150px; height: 150px;">
+                            </div>
+                            {{ form.avatar.label(class="form-label") }}
+                            {{ form.avatar(class="form-control") }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.theme_preference.label(class="form-label") }}
+                            {{ form.theme_preference(class="form-select") }}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

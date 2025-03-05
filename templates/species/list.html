@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+
+{% block title %}Endangered Species{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="fas fa-paw me-2 text-forest"></i>Endangered Species</h2>
+                {% if current_user.is_authenticated %}
+                <div class="mt-3">
+                    <a href="{{ url_for('species.my_sightings') }}" class="btn btn-outline-forest">
+                        <i class="fas fa-binoculars me-2"></i>View My Sightings
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            {% if current_user.is_authenticated and current_user.role == 'teacher' %}
+            <a href="{{ url_for('species.add') }}" class="btn btn-forest">
+                <i class="fas fa-plus me-2"></i>Add New Species
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if current_user.is_authenticated and current_user.role in ['teacher', 'community'] %}
+<div class="card mb-4 filter-card">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Filter & Group</h5>
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label for="conservation_status" class="form-label">Conservation Status</label>
+                <select class="form-select" id="conservation_status" name="status">
+                    <option value="">All</option>
+                    <option value="Critically Endangered">Critically Endangered</option>
+                    <option value="Endangered">Endangered</option>
+                    <option value="Vulnerable">Vulnerable</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="sort" class="form-label">Sort By</label>
+                <select class="form-select" id="sort" name="sort">
+                    <option value="name">Name</option>
+                    <option value="population">Population</option>
+                    <option value="created_at">Date Added</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-forest w-100">
+                    <i class="fas fa-filter me-2"></i>Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+    {% for species in species %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 species-card hover-lift">
+            <div class="card-body">
+                <h5 class="card-title mb-2">{{ species.name }}</h5>
+                <h6 class="card-subtitle mb-3 text-muted font-italic">{{ species.scientific_name }}</h6>
+
+                <div class="status-badge mb-3">
+                    <span class="badge rounded-pill {{ 'bg-danger' if species.conservation_status == 'Critically Endangered'
+                                                   else 'bg-warning text-dark' if species.conservation_status == 'Endangered'
+                                                   else 'bg-info' }}">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        {{ species.conservation_status }}
+                    </span>
+                </div>
+
+                <p class="card-text mb-4">{{ species.description[:200] }}...</p>
+
+                <div class="species-info">
+                    <div class="info-item mb-2">
+                        <i class="fas fa-globe-asia me-2 text-forest"></i>
+                        <span>{{ species.habitat }}</span>
+                    </div>
+                    <div class="info-item mb-2">
+                        <i class="fas fa-users me-2 text-forest"></i>
+                        <span>Population: {{ species.population if species.population else 'Unknown' }}</span>
+                    </div>
+
+                    {% if current_user.is_authenticated and current_user.role in ['teacher', 'community'] %}
+                    <div class="info-item mb-2">
+                        <i class="fas fa-calendar me-2 text-forest"></i>
+                        <span>Added: {{ species.created_at.strftime('%B %d, %Y') }}</span>
+                    </div>
+                    <div class="info-item mb-2">
+                        <i class="fas fa-user me-2 text-forest"></i>
+                        <span>By: {{ species.created_by.username if species.created_by else 'System' }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="d-flex justify-content-between align-items-center">
+                    <button class="btn btn-outline-forest" data-bs-toggle="modal" data-bs-target="#speciesModal{{ species.id }}">
+                        <i class="fas fa-info-circle me-2"></i>Learn More
+                    </button>
+                    {% if current_user.is_authenticated %}
+                    <button class="btn btn-forest" data-bs-toggle="modal" data-bs-target="#reportSightingModal{{ species.id }}">
+                        <i class="fas fa-binoculars me-2"></i>Report
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Species Details Modal -->
+    <div class="modal fade" id="speciesModal{{ species.id }}" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title">{{ species.name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h6 class="text-muted font-italic mb-4">{{ species.scientific_name }}</h6>
+
+                    <div class="alert alert-conservation mb-4">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-{{ 'danger' if species.conservation_status == 'Critically Endangered'
+                                                else 'warning text-dark' if species.conservation_status == 'Endangered'
+                                                else 'info' }} me-3">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                {{ species.conservation_status }}
+                            </span>
+                            <span class="ms-2">Population: {{ species.population if species.population else 'Unknown' }} individuals</span>
+                        </div>
+                    </div>
+
+                    <div class="info-section mb-4">
+                        <h6 class="section-title">About</h6>
+                        <p>{{ species.description }}</p>
+                    </div>
+
+                    <div class="info-section mb-4">
+                        <h6 class="section-title">Habitat</h6>
+                        <p>{{ species.habitat }}</p>
+                    </div>
+
+                    <div class="info-section mb-4">
+                        <h6 class="section-title">Threats</h6>
+                        <p>{{ species.threats }}</p>
+                    </div>
+
+                    {% if current_user.is_authenticated and current_user.role in ['teacher', 'community'] %}
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="section-title mb-3">Entry Details</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-2">
+                                        <i class="fas fa-user me-2 text-forest"></i>
+                                        Added by: {{ species.created_by.username if species.created_by else 'System' }}
+                                    </p>
+                                    <p class="mb-2">
+                                        <i class="fas fa-calendar me-2 text-forest"></i>
+                                        Date: {{ species.created_at.strftime('%B %d, %Y') }}
+                                    </p>
+                                    {% if species.last_updated %}
+                                    <p class="mb-0">
+                                        <i class="fas fa-edit me-2 text-forest"></i>
+                                        Last updated: {{ species.last_updated.strftime('%B %d, %Y') }}
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if species.sightings %}
+                    <div class="mt-4">
+                        <h6 class="section-title mb-3">Recent Sightings</h6>
+                        <div class="list-group">
+                            {% for sighting in species.sightings[:3] %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong class="d-block mb-1">{{ sighting.location }}</strong>
+                                        <small class="text-muted">
+                                            Reported by: {{ sighting.observer.username }} on {{ sighting.sighting_date.strftime('%B %d, %Y') }}
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-{{ 'success' if sighting.status == 'verified' else 'warning text-dark' }}">
+                                        {{ sighting.status|title }}
+                                    </span>
+                                </div>
+                                {% if sighting.description %}
+                                <p class="mt-2 mb-0 text-muted">{{ sighting.description }}</p>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-outline-forest" data-bs-dismiss="modal">Close</button>
+                    {% if current_user.is_authenticated %}
+                    <button type="button" class="btn btn-forest" data-bs-toggle="modal"
+                            data-bs-target="#reportSightingModal{{ species.id }}">
+                        <i class="fas fa-binoculars me-2"></i>Report Sighting
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Sighting Modal -->
+    {% if current_user.is_authenticated %}
+    <div class="modal fade" id="reportSightingModal{{ species.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title">Report {{ species.name }} Sighting</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ url_for('species.report_sighting', species_id=species.id) }}" method="POST">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="location" name="location" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="sighting_date" class="form-label">Date of Sighting</label>
+                            <input type="date" class="form-control" id="sighting_date" name="sighting_date"
+                                   required value="{{ datetime.now().strftime('%Y-%m-%d') }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"
+                                      placeholder="Describe what you observed..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0">
+                        <button type="button" class="btn btn-outline-forest" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-forest">
+                            <i class="fas fa-paper-plane me-2"></i>Submit Report
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+
+<style>
+/* Nature-themed Custom Styles */
+.text-forest {
+    color: var(--color-forest);
+}
+
+.btn-forest {
+    background: var(--color-forest);
+    color: white;
+    border: none;
+}
+
+.btn-forest:hover {
+    background: var(--color-moss);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-outline-forest {
+    color: var(--color-forest);
+    border: 2px solid var(--color-forest);
+    background: transparent;
+}
+
+.btn-outline-forest:hover {
+    background: var(--color-forest);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.filter-card {
+    border-left: 4px solid var(--color-forest);
+    background: var(--section-bg);
+}
+
+.species-card {
+    transition: all var(--transition-speed) ease;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.species-info {
+    padding-top: var(--spacing-unit);
+    border-top: 1px solid var(--border-color);
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+}
+
+.status-badge {
+    display: inline-block;
+}
+
+.alert-conservation {
+    background: var(--section-bg);
+    border: 1px solid var(--color-forest);
+    border-radius: var(--card-border-radius);
+}
+
+.section-title {
+    color: var(--color-forest);
+    font-weight: 600;
+    margin-bottom: 1rem;
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.font-italic {
+    font-style: italic;
+}
+
+/* Modal Enhancements */
+.modal-content {
+    border: none;
+    border-radius: var(--card-border-radius);
+    background: var(--card-bg);
+}
+
+.info-section {
+    padding: calc(var(--spacing-unit) * 1.25) 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.info-section:last-child {
+    border-bottom: none;
+}
+
+/* Card Styles */
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+}
+
+/* Form Styles */
+.form-control, .form-select {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.form-label {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* List Group */
+.list-group-item {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+</style>
+{% endblock %}

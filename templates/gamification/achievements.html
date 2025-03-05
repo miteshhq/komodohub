@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Achievements{% endblock %}
+
+{% block head %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Your Achievements</h1>
+            <p class="lead">Track your conservation journey progress</p>
+        </div>
+    </div>
+
+    <!-- Achievement Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Total Points</h5>
+                    <h2 class="display-4 mb-0">{{ total_points }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Achievements Earned</h5>
+                    <h2 class="display-4 mb-0">{{ achievements|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Next Achievement</h5>
+                    {% if available_levels %}
+                    <div class="achievement-progress">
+                        <img src="{{ available_levels[0].badge_image }}" alt="{{ available_levels[0].name }}" 
+                             class="achievement-badge mb-2" style="width: 64px; height: 64px;">
+                        <h6>{{ available_levels[0].name }}</h6>
+                        <small class="text-muted">{{ available_levels[0].description }}</small>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mt-3">You've earned all available achievements!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Achievement Categories -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Achievement Progress</h5>
+                    <div class="chart-container" style="position: relative; height: 300px;">
+                        <canvas id="achievementChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Achievement List -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Your Achievement Collection</h5>
+                    {% if achievements %}
+                    <div class="row row-cols-1 row-cols-md-3 g-4">
+                        {% for achievement in achievements %}
+                        <div class="col">
+                            <div class="card h-100 achievement-card">
+                                <div class="card-body text-center">
+                                    <img src="{{ achievement.badge_image }}" alt="{{ achievement.title }}" 
+                                         class="achievement-badge mb-3">
+                                    <h5 class="card-title">{{ achievement.title }}</h5>
+                                    <p class="card-text">{{ achievement.description }}</p>
+                                    <div class="achievement-footer">
+                                        <span class="badge bg-primary">{{ achievement.points }} points</span>
+                                        <small class="text-muted d-block mt-2">
+                                            Earned on {{ achievement.achieved_at.strftime('%Y-%m-%d') }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Complete challenges and activities to earn achievements!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/achievements/progress')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error loading achievement data:', data.error);
+                return;
+            }
+
+            const categories = Object.keys(data.categories);
+            const points = categories.map(cat => data.categories[cat].points);
+            const completed = categories.map(cat => data.categories[cat].completed);
+
+            const ctx = document.getElementById('achievementChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: categories,
+                    datasets: [
+                        {
+                            label: 'Points Earned',
+                            data: points,
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Achievements Completed',
+                            data: completed,
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error:', error));
+});
+</script>
+
+<style>
+.achievement-badge {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+}
+
+.achievement-card {
+    transition: transform 0.2s;
+}
+
+.achievement-card:hover {
+    transform: translateY(-5px);
+}
+
+.achievement-footer {
+    margin-top: auto;
+}
+
+.chart-container {
+    background: var(--bs-light);
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+</style>
+{% endblock %}

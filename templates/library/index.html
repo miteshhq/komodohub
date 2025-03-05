@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Resource Library{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Resource Library</h1>
+            {% if current_user.role in ['teacher', 'community'] %}
+            <a href="{{ url_for('library.create') }}" class="btn btn-primary">Create New Resource</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        {% for resource in resources %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ resource.title }}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">
+                        {{ resource.resource_type.title() }} by {{ resource.author.username }}
+                    </h6>
+                    <p class="card-text">{{ resource.content[:200] }}...</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            Created {{ resource.created_at.strftime('%Y-%m-%d') }}
+                        </small>
+                        <a href="{{ url_for('library.view', id=resource.id) }}" class="btn btn-info">Read More</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

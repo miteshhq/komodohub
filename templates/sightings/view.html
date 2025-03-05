@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}View Sighting{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">{{ sighting.species.name }}</h2>
+                    <p class="text-muted">Reported on {{ sighting.sighting_date.strftime('%Y-%m-%d') }}</p>
+                    
+                    <dl class="row">
+                        <dt class="col-sm-3">Location</dt>
+                        <dd class="col-sm-9">{{ sighting.location }}</dd>
+
+                        <dt class="col-sm-3">Description</dt>
+                        <dd class="col-sm-9">{{ sighting.description }}</dd>
+
+                        <dt class="col-sm-3">Status</dt>
+                        <dd class="col-sm-9">{{ sighting.status }}</dd>
+
+                        <dt class="col-sm-3">Reported By</dt>
+                        <dd class="col-sm-9">{{ sighting.observer.username }}</dd>
+                    </dl>
+
+                    <div class="mt-4">
+                        <a href="{{ url_for('sightings.list_sightings') }}" class="btn btn-secondary">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

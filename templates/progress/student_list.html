@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Student Progress{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Student Progress Tracking</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for student in students %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ student.username }}</h5>
+                    <p class="card-text">
+                        <strong>Email:</strong> {{ student.email }}<br>
+                        <strong>Overall Progress:</strong> {{ student.get_progress_percentage() }}%
+                    </p>
+                    <a href="{{ url_for('progress.view_progress', student_id=student.id) }}" 
+                       class="btn btn-primary">View Detailed Progress</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

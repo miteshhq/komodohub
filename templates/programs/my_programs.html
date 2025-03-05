@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}My Programs{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-bookmark me-2"></i>My Programs</h2>
+        <p class="lead">Programs you are currently participating in</p>
+    </div>
+</div>
+
+{% if programs %}
+<div class="row g-4">
+    {% for program in programs %}
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ program.title }}</h5>
+                <p class="card-text">{{ program.description[:200] }}...</p>
+
+                <div class="mt-3">
+                    <div class="mb-2">
+                        <i class="fas fa-map-marker-alt me-2"></i>{{ program.location }}
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        {{ program.start_date.strftime('%B %d, %Y') }} - 
+                        {{ program.end_date.strftime('%B %d, %Y') }}
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-user me-2"></i>
+                        Coordinator: {{ program.coordinator.username }}
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <form action="{{ url_for('programs.leave_program', program_id=program.id) }}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-sign-out-alt me-2"></i>Leave Program
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>You haven't joined any programs yet.
+    <a href="{{ url_for('programs.list') }}" class="alert-link">Browse available programs</a>
+</div>
+{% endif %}
+{% endblock %}

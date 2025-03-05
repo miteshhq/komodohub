@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Species{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mb-4">
+                    <i class="fas fa-paw me-2"></i>Add New Species
+                </h2>
+                <form method="POST" action="{{ url_for('species.add') }}">
+                    {{ form.hidden_tag() }}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.name.label(class="form-label") }}
+                                {{ form.name(class="form-control") }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.scientific_name.label(class="form-label") }}
+                                {{ form.scientific_name(class="form-control") }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows="4") }}
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.population.label(class="form-label") }}
+                                {{ form.population(class="form-control") }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.conservation_status.label(class="form-label") }}
+                                {{ form.conservation_status(class="form-control") }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.habitat.label(class="form-label") }}
+                        {{ form.habitat(class="form-control") }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.threats.label(class="form-label") }}
+                        {{ form.threats(class="form-control", rows="3") }}
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('species.list') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Species List
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-plus me-2"></i>Add Species
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

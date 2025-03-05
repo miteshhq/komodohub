@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}All Species Sightings{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-binoculars me-2 text-forest"></i>All Species Sightings</h2>
+            <a href="{{ url_for('species.list') }}" class="btn btn-outline-forest">
+                <i class="fas fa-arrow-left me-2"></i>Back to Species List
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Filter & Group</h5>
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label for="role" class="form-label">Observer Role</label>
+                <select class="form-select" id="role" name="role">
+                    <option value="">All Roles</option>
+                    <option value="teacher" {% if request.args.get('role') == 'teacher' %}selected{% endif %}>Teachers</option>
+                    <option value="student" {% if request.args.get('role') == 'student' %}selected{% endif %}>Students</option>
+                    <option value="community" {% if request.args.get('role') == 'community' %}selected{% endif %}>Community Members</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="date_range" class="form-label">Date Range</label>
+                <select class="form-select" id="date_range" name="date_range">
+                    <option value="">All Time</option>
+                    <option value="today" {% if request.args.get('date_range') == 'today' %}selected{% endif %}>Today</option>
+                    <option value="week" {% if request.args.get('date_range') == 'week' %}selected{% endif %}>This Week</option>
+                    <option value="month" {% if request.args.get('date_range') == 'month' %}selected{% endif %}>This Month</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="sort" class="form-label">Sort By</label>
+                <select class="form-select" id="sort" name="sort">
+                    <option value="date_desc" {% if request.args.get('sort') == 'date_desc' %}selected{% endif %}>Date (Newest)</option>
+                    <option value="date_asc" {% if request.args.get('sort') == 'date_asc' %}selected{% endif %}>Date (Oldest)</option>
+                    <option value="species" {% if request.args.get('sort') == 'species' %}selected{% endif %}>Species Name</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-forest w-100">
+                    <i class="fas fa-filter me-2"></i>Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% for role, role_sightings in sightings|groupby('observer.role') %}
+<div class="card mb-4">
+    <div class="card-header bg-{{ 'primary' if role == 'teacher' else 'success' if role == 'student' else 'info' }} bg-opacity-10">
+        <h5 class="card-title mb-0">
+            <i class="fas {{ 'fa-chalkboard-teacher' if role == 'teacher' else 'fa-user-graduate' if role == 'student' else 'fa-users' }} me-2"></i>
+            {{ role|title }} Sightings
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="list-group">
+            {% for sighting in role_sightings %}
+            <div class="list-group-item">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <h5 class="mb-1">{{ sighting.species.name }}</h5>
+                        <p class="mb-1 text-muted">
+                            <i class="fas fa-user me-2"></i>{{ sighting.observer.username }}
+                        </p>
+                    </div>
+                    <div class="col-md-4">
+                        <p class="mb-1">
+                            <i class="fas fa-map-marker-alt me-2"></i>{{ sighting.location }}
+                        </p>
+                        <p class="mb-1">
+                            <i class="fas fa-calendar me-2"></i>{{ sighting.sighting_date.strftime('%B %d, %Y') }}
+                        </p>
+                    </div>
+                    <div class="col-md-3">
+                        {% if sighting.description %}
+                        <p class="mb-1"><small>{{ sighting.description }}</small></p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-1 text-end">
+                        {% if current_user.role == 'teacher' %}
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-{{ 'success' if sighting.status == 'verified' else 'warning' if sighting.status == 'pending' else 'danger' }} dropdown-toggle" 
+                                    type="button" data-bs-toggle="dropdown">
+                                {{ sighting.status|title }}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <form action="{{ url_for('species.update_sighting_status', sighting_id=sighting.id) }}" method="POST">
+                                        <input type="hidden" name="status" value="verified">
+                                        <button type="submit" class="dropdown-item text-success">
+                                            <i class="fas fa-check me-2"></i>Verify
+                                        </button>
+                                    </form>
+                                </li>
+                                <li>
+                                    <form action="{{ url_for('species.update_sighting_status', sighting_id=sighting.id) }}" method="POST">
+                                        <input type="hidden" name="status" value="rejected">
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="fas fa-times me-2"></i>Reject
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                        {% else %}
+                        <span class="badge bg-{{ 'success' if sighting.status == 'verified' else 'warning' if sighting.status == 'pending' else 'danger' }}">
+                            {{ sighting.status|title }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% if not sightings %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>No sightings found matching your filters.
+</div>
+{% endif %}
+
+<style>
+/* Role-based styling */
+.bg-opacity-10 {
+    --bs-bg-opacity: 0.1;
+}
+
+/* List item enhancements */
+.list-group-item {
+    transition: all var(--transition-speed) ease;
+    border: 1px solid var(--border-color);
+    margin-bottom: 0.5rem;
+    border-radius: var(--card-border-radius);
+    background: var(--card-bg);
+    color: var(--text-primary);
+}
+
+.list-group-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Status badges */
+.badge {
+    padding: 0.5em 1em;
+    font-weight: 500;
+    border-radius: 20px;
+}
+
+/* Dropdown styling */
+.dropdown-menu {
+    border: none;
+    border-radius: 8px;
+    box-shadow: var(--shadow-md);
+    padding: 0.5rem;
+    background: var(--card-bg);
+}
+
+.dropdown-item {
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    color: var(--text-primary);
+}
+
+.dropdown-item:hover {
+    background-color: rgba(var(--color-forest-rgb), 0.1);
+    color: var(--text-primary);
+}
+
+/* Button enhancements */
+.btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.875rem;
+}
+
+/* Icon colors */
+.fas {
+    color: var(--color-forest);
+}
+
+/* Text styles */
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+/* Alert styling */
+.alert {
+    border-radius: var(--card-border-radius);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    background: var(--section-bg);
+}
+
+/* Form control styling */
+.form-select {
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    padding: 0.75rem;
+    background: var(--card-bg);
+    color: var(--text-primary);
+}
+
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+/* Card Styles */
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+}
+
+.card-header {
+    background: var(--section-bg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.card-body {
+    color: var(--text-primary);
+}
+</style>
+{% endblock %}

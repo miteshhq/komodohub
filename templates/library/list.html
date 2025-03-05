@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Conservation Library{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Conservation Library</h1>
+            <p class="lead">Access and share educational resources and research papers</p>
+            <a href="{{ url_for('library.create_resource') }}" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> Add New Resource
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Filter Resources</h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('library.resources') }}">
+                        <div class="mb-3">
+                            <label class="form-label">Type</label>
+                            <select name="type" class="form-select">
+                                <option value="">All Types</option>
+                                <option value="report">Reports</option>
+                                <option value="essay">Essays</option>
+                                <option value="article">Articles</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Visibility</label>
+                            <select name="visibility" class="form-select">
+                                <option value="">All</option>
+                                <option value="public">Public</option>
+                                <option value="private">Private</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            {% for resource in resources %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title">{{ resource.title }}</h5>
+                        <span class="badge {% if resource.is_public %}bg-success{% else %}bg-warning{% endif %}">
+                            {{ 'Public' if resource.is_public else 'Private' }}
+                        </span>
+                    </div>
+                    <h6 class="card-subtitle mb-2 text-muted">{{ resource.resource_type|title }}</h6>
+                    <p class="card-text">{{ resource.content[:200] }}...</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">By {{ resource.author.username }}</small>
+                            <small class="text-muted">on {{ resource.created_at.strftime('%Y-%m-%d') }}</small>
+                        </div>
+                        <a href="{{ url_for('library.view_resource', id=resource.id) }}" class="btn btn-info btn-sm">
+                            Read More
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                No resources found. Be the first to add one!
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

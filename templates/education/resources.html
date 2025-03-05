@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Educational Resources{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h2><i class="fas fa-book me-2"></i>Educational Resources</h2>
+        {% if current_user.is_authenticated and current_user.role == 'teacher' %}
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addResourceModal">
+            <i class="fas fa-plus me-2"></i>Add Resource
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Search and Filter Section -->
+    <div class="col-md-8">
+        <form class="d-flex gap-2" method="GET">
+            <input type="text" name="search" class="form-control" placeholder="Search resources..." 
+                   value="{{ search_query or '' }}">
+            <select name="tag" class="form-select" style="width: auto;">
+                <option value="">All Tags</option>
+                {% for tag in tags %}
+                <option value="{{ tag.name }}" {% if current_tag == tag.name %}selected{% endif %}>
+                    {{ tag.name }}
+                </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search me-1"></i>Filter
+            </button>
+            {% if search_query or current_tag %}
+            <a href="{{ url_for('education.resources') }}" class="btn btn-secondary">
+                <i class="fas fa-times me-1"></i>Clear
+            </a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for resource in resources %}
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ resource.title }}</h5>
+                <p class="card-text">{{ resource.content[:200] }}...</p>
+                <div class="mt-3">
+                    {% for tag in resource.tags %}
+                    <a href="{{ url_for('education.resources', tag=tag.name) }}" 
+                       class="badge bg-secondary text-decoration-none me-1">
+                        {{ tag.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-user me-2"></i>By {{ resource.author.username }}
+                    </small>
+                    <br>
+                    <small class="text-muted">
+                        <i class="fas fa-calendar me-2"></i>{{ resource.created_at.strftime('%B %d, %Y') }}
+                    </small>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#resourceModal{{ resource.id }}">
+                    Read More
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resource Modal -->
+    <div class="modal fade" id="resourceModal{{ resource.id }}" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ resource.title }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {{ resource.content }}
+                    <div class="mt-3">
+                        {% for tag in resource.tags %}
+                        <span class="badge bg-secondary me-1">{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Add Resource Modal -->
+{% if current_user.is_authenticated and current_user.role == 'teacher' %}
+<div class="modal fade" id="addResourceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Resource</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{{ url_for('education.add_resource') }}">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.title.label(class="form-label") }}
+                        {{ form.title(class="form-control") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.content.label(class="form-label") }}
+                        {{ form.content(class="form-control", rows="6") }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

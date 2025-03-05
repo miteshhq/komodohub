@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}{{ challenge.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('gamification.conservation_challenges') }}">Conservation Challenges</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ challenge.title }}</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1>{{ challenge.title }}</h1>
+                    <p class="lead">{{ challenge.description }}</p>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-{{ {'easy': 'success', 'medium': 'warning', 'hard': 'danger'}[challenge.difficulty] }} mb-2">
+                        {{ challenge.difficulty|title }}
+                    </span>
+                    <div class="d-block">
+                        <span class="badge bg-primary">{{ challenge.points }} points</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Challenge Progress -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Progress</h5>
+                    <div class="progress mb-3" style="height: 20px;">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ completion_percentage }}%"
+                             aria-valuenow="{{ completion_percentage }}" 
+                             aria-valuemin="0" aria-valuemax="100">
+                            {{ completion_percentage|round|int }}% Complete
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between text-muted">
+                        <small>Started: {{ user_challenge.started_at|datetime }}</small>
+                        <small>Time Remaining: {{ (user_challenge.started_at + timedelta(days=challenge.duration_days))|timeuntil }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Challenge Requirements -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Challenge Steps</h5>
+                </div>
+                <div class="card-body">
+                    {% if requirements %}
+                    <form method="POST" action="{{ url_for('gamification.update_challenge_progress', challenge_id=user_challenge.id) }}">
+                        <div class="list-group">
+                            {% for req in requirements %}
+                            <div class="list-group-item">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">{{ req.title }}</h6>
+                                        <p class="mb-1">{{ req.description }}</p>
+                                        {% if req.hint %}
+                                        <small class="text-muted">
+                                            <i class="fas fa-lightbulb me-1"></i>{{ req.hint }}
+                                        </small>
+                                        {% endif %}
+                                    </div>
+                                    {% if req.id in progress_data.steps_completed %}
+                                    <span class="badge bg-success ms-3">
+                                        <i class="fas fa-check"></i>
+                                    </span>
+                                    {% else %}
+                                    <button type="submit" name="step_id" value="{{ req.id }}"
+                                            class="btn btn-outline-primary btn-sm ms-3">
+                                        Complete Step
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </form>
+                    {% else %}
+                    <p class="text-muted">No requirements specified for this challenge.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Challenge Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Challenge Information</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-3">
+                            <i class="fas fa-calendar me-2"></i>
+                            Duration: {{ challenge.duration_days }} days
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-star me-2"></i>
+                            Points: {{ challenge.points }}
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-layer-group me-2"></i>
+                            Type: {{ challenge.challenge_type|title }}
+                        </li>
+                    </ul>
+                    
+                    {% if user_challenge.status == 'in_progress' %}
+                    <a href="{{ url_for('gamification.abandon_challenge', challenge_id=user_challenge.id) }}"
+                       class="btn btn-outline-danger w-100"
+                       onclick="return confirm('Are you sure you want to abandon this challenge? This action cannot be undone.')">
+                        Abandon Challenge
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Tips -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Tips for Success</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Complete steps in order
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-clock text-warning me-2"></i>
+                            Track your time carefully
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-book text-info me-2"></i>
+                            Document your progress
+                        </li>
+                        <li>
+                            <i class="fas fa-users text-primary me-2"></i>
+                            Share your experience
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.progress {
+    border-radius: 10px;
+    background-color: var(--bs-light);
+}
+
+.list-group-item {
+    border-left: 4px solid transparent;
+}
+
+.list-group-item:has(.badge-success) {
+    border-left-color: var(--bs-success);
+    background-color: var(--bs-light);
+}
+
+.card {
+    border-radius: 10px;
+}
+
+.badge {
+    padding: 0.5em 1em;
+}
+</style>
+{% endblock %}

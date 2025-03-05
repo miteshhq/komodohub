@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Conservation Forum{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1><i class="fas fa-comments me-2"></i>Conservation Forum</h1>
+            <p class="lead">Join discussions about wildlife conservation and share your experiences.</p>
+        </div>
+        {% if current_user.role == 'teacher' %}
+        <div class="col-md-4 text-end">
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newCategoryModal">
+                <i class="fas fa-plus me-2"></i>New Category
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="row">
+        {% for category in categories %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="{{ url_for('forum.view_category', id=category.id) }}" class="text-decoration-none">
+                            {{ category.name }}
+                        </a>
+                    </h5>
+                    <p class="card-text text-muted">{{ category.description }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            {{ category.threads|length }} threads
+                        </small>
+                        {% if category.threads %}
+                        <small class="text-muted">
+                            Latest: {{ category.threads[-1].created_at.strftime('%Y-%m-%d') }}
+                        </small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% if current_user.role == 'teacher' %}
+<!-- New Category Modal -->
+<div class="modal fade" id="newCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('forum.create_category') }}">
+                <div class="modal-body">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control") }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.card {
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+</style>
+{% endblock %}

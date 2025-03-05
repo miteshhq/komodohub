@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Challenges Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Conservation Challenges</h1>
+            <p class="lead">Test your knowledge and earn points through interactive challenges</p>
+        </div>
+    </div>
+
+    <!-- Active Challenges Section -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Your Active Challenges</h5>
+                </div>
+                <div class="card-body">
+                    {% if user_challenges %}
+                    <div class="list-group">
+                        {% for challenge in user_challenges %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ challenge.challenge.title }}</h6>
+                                    <p class="mb-1 text-muted">{{ challenge.challenge.description }}</p>
+                                    <small class="text-muted">
+                                        Started: {{ challenge.started_at.strftime('%Y-%m-%d') }}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-primary">{{ challenge.status }}</span>
+                                    <br>
+                                    <small class="text-muted">Points: {{ challenge.challenge.points }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No active challenges. Start one below!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Species Identification Challenges -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Species Identification</h5>
+                </div>
+                <div class="card-body">
+                    {% if species_challenges %}
+                    <div class="list-group">
+                        {% for challenge in species_challenges %}
+                        <a href="{{ url_for('gamification.species_identification') }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ challenge.species.name }}</h6>
+                                <span class="badge bg-{{ {'easy': 'success', 'medium': 'warning', 'hard': 'danger'}[challenge.difficulty] }}">
+                                    {{ challenge.difficulty }}
+                                </span>
+                            </div>
+                            <p class="mb-1">{{ challenge.points }} points</p>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No identification challenges available at the moment.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Conservation Challenges -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Conservation Challenges</h5>
+                </div>
+                <div class="card-body">
+                    {% if conservation_challenges %}
+                    <div class="list-group">
+                        {% for challenge in conservation_challenges %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ challenge.title }}</h6>
+                                <span class="badge bg-{{ {'easy': 'success', 'medium': 'warning', 'hard': 'danger'}[challenge.difficulty] }}">
+                                    {{ challenge.difficulty }}
+                                </span>
+                            </div>
+                            <p class="mb-1">{{ challenge.description }}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <small class="text-muted">{{ challenge.duration_days }} days • {{ challenge.points }} points</small>
+                                <a href="{{ url_for('gamification.start_challenge', challenge_id=challenge.id) }}" 
+                                   class="btn btn-sm btn-primary">Start Challenge</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No conservation challenges available at the moment.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Achievements Section -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Your Achievements</h5>
+                </div>
+                <div class="card-body">
+                    {% if achievements %}
+                    <div class="row row-cols-1 row-cols-md-3 g-4">
+                        {% for achievement in achievements %}
+                        <div class="col">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <img src="{{ achievement.badge_image }}" alt="{{ achievement.title }}" 
+                                         class="mb-3" style="width: 64px; height: 64px;">
+                                    <h6 class="card-title">{{ achievement.title }}</h6>
+                                    <p class="card-text small">{{ achievement.description }}</p>
+                                    <span class="badge bg-success">{{ achievement.points }} points</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Complete challenges to earn achievements!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

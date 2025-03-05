@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block title %}Conservation Quiz{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-tree me-2 text-forest"></i>Conservation Quiz</h2>
+            <p class="lead">Test your knowledge about wildlife conservation!</p>
+        </div>
+    </div>
+
+    <div class="quiz-container">
+        <div class="card quiz-card">
+            <div class="card-body">
+                <div class="progress mb-4" style="height: 8px;">
+                    <div class="progress-bar bg-forest" role="progressbar" style="width: 0%"></div>
+                </div>
+
+                <div id="loadingIndicator" class="text-center py-5">
+                    <div class="spinner-border text-forest" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+
+                <h4 class="question-text mb-4"></h4>
+                <div class="options-container d-grid gap-3">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+
+                <div class="explanation mt-4 d-none alert">
+                    <h5 class="alert-heading mb-2 d-flex align-items-center">
+                        <i class="fas me-2"></i>
+                        <span></span>
+                    </h5>
+                    <p class="mb-0"></p>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <span class="score-display">Score: <span class="score">0</span>/10</span>
+                <button class="btn btn-forest next-question" disabled>
+                    Next Question <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quiz completion modal -->
+<div class="modal fade" id="quizCompleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Quiz Complete!</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-award text-forest display-1 mb-4"></i>
+                <p class="display-4 mb-3 final-score">0</p>
+                <p class="lead mb-0">Great job completing the conservation quiz!</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-forest" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-forest restart-quiz">
+                    <i class="fas fa-redo me-2"></i>Try Again
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.quiz-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.question-text {
+    color: var(--heading-color);
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.quiz-option {
+    transition: all var(--transition-speed) ease;
+    padding: 1rem 1.25rem;
+    text-align: left;
+    font-size: 1.1rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.quiz-option:not([disabled]):hover {
+    transform: translateX(10px);
+    border-color: var(--color-forest);
+    background: var(--hover-bg);
+}
+
+.quiz-option.correct {
+    background-color: rgba(var(--bs-success-rgb), 0.1) !important;
+    border-color: var(--bs-success) !important;
+    color: var(--bs-success) !important;
+}
+
+.quiz-option.incorrect {
+    background-color: rgba(var(--bs-danger-rgb), 0.1) !important;
+    border-color: var(--bs-danger) !important;
+    color: var(--bs-danger) !important;
+}
+
+.explanation {
+    display: none;
+    background: var(--section-bg);
+    border: 1px solid var(--border-color);
+}
+
+.explanation.correct {
+    border-left: 4px solid var(--bs-success);
+}
+
+.explanation.incorrect {
+    border-left: 4px solid var(--bs-danger);
+}
+
+.score-display {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.progress-bar {
+    transition: width 0.3s ease;
+}
+
+/* Modal enhancements */
+.modal-content {
+    border: none;
+    border-radius: var(--card-border-radius);
+    background: var(--modal-bg);
+}
+
+.modal-title {
+    color: var(--heading-color);
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.display-4 {
+    color: var(--color-forest);
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+}
+</style>
+
+<script>
+let currentQuestion = null;
+let score = 0;
+let questionCount = 0;
+
+async function loadQuestion() {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const questionText = document.querySelector('.question-text');
+    const optionsContainer = document.querySelector('.options-container');
+    const explanation = document.querySelector('.explanation');
+
+    try {
+        loadingIndicator.style.display = 'block';
+        questionText.style.display = 'none';
+        optionsContainer.innerHTML = '';
+        explanation.style.display = 'none';
+
+        const response = await fetch('{{ url_for("games.get_conservation_question") }}');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        currentQuestion = data;
+        displayQuestion(data);
+    } catch (error) {
+        console.error('Error loading question:', error);
+        questionText.textContent = 'Error loading question. Please try again.';
+        questionText.style.display = 'block';
+    } finally {
+        loadingIndicator.style.display = 'none';
+    }
+}
+
+function displayQuestion(question) {
+    const questionText = document.querySelector('.question-text');
+    const optionsContainer = document.querySelector('.options-container');
+    const explanation = document.querySelector('.explanation');
+
+    questionText.style.display = 'block';
+    questionText.textContent = question.question;
+    optionsContainer.innerHTML = '';
+    explanation.style.display = 'none';
+    explanation.className = 'explanation mt-4 d-none alert';
+
+    question.options.forEach((option, index) => {
+        const button = document.createElement('button');
+        button.className = 'btn quiz-option';
+        button.textContent = option;
+        button.onclick = () => checkAnswer(index);
+        optionsContainer.appendChild(button);
+    });
+
+    document.querySelector('.next-question').disabled = true;
+    updateProgress();
+}
+
+function checkAnswer(selectedIndex) {
+    if (!currentQuestion) return;
+
+    const options = document.querySelectorAll('.quiz-option');
+    const explanation = document.querySelector('.explanation');
+    const explanationIcon = explanation.querySelector('.alert-heading i');
+    const explanationTitle = explanation.querySelector('.alert-heading span');
+    const explanationText = explanation.querySelector('p');
+
+    options.forEach(opt => opt.disabled = true);
+
+    if (selectedIndex === currentQuestion.correct) {
+        options[selectedIndex].classList.add('correct');
+        explanation.classList.add('correct');
+        explanationIcon.className = 'fas fa-check-circle me-2';
+        explanationTitle.textContent = 'Correct!';
+        score++;
+    } else {
+        options[selectedIndex].classList.add('incorrect');
+        options[currentQuestion.correct].classList.add('correct');
+        explanation.classList.add('incorrect');
+        explanationIcon.className = 'fas fa-times-circle me-2';
+        explanationTitle.textContent = 'Incorrect';
+    }
+
+    document.querySelector('.score').textContent = score;
+    explanationText.textContent = currentQuestion.explanation;
+    explanation.classList.remove('d-none');
+    explanation.style.display = 'block';
+    document.querySelector('.next-question').disabled = false;
+
+    questionCount++;
+    if (questionCount >= 10) {
+        showCompletionModal();
+    }
+}
+
+function updateProgress() {
+    const progress = (questionCount / 10) * 100;
+    document.querySelector('.progress-bar').style.width = `${progress}%`;
+}
+
+function showCompletionModal() {
+    document.querySelector('.final-score').textContent = `${score} / 10`;
+    const modal = new bootstrap.Modal(document.getElementById('quizCompleteModal'));
+    modal.show();
+}
+
+// Event Listeners
+document.querySelector('.next-question').addEventListener('click', loadQuestion);
+document.querySelector('.restart-quiz').addEventListener('click', () => {
+    score = 0;
+    questionCount = 0;
+    document.querySelector('.score').textContent = '0';
+    document.querySelector('.progress-bar').style.width = '0%';
+    loadQuestion();
+    const modal = bootstrap.Modal.getInstance(document.getElementById('quizCompleteModal'));
+    modal.hide();
+});
+
+// Start the quiz when the page loads
+document.addEventListener('DOMContentLoaded', loadQuestion);
+</script>
+{% endblock %}

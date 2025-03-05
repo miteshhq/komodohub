@@ -1,0 +1,10 @@
+flask
+flask-login
+flask-sqlalchemy
+flask-wtf
+gunicorn
+sqlalchemy
+email-validator
+werkzeug
+wtforms
+python-dotenv

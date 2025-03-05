@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Conservation Analytics{% endblock %}
+
+{% block head %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Conservation Analytics Dashboard</h1>
+            <p class="lead">Track conservation trends and student progress</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Species Status Chart -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Species Conservation Status</h5>
+                    <div class="chart-container" style="position: relative; height: 300px;">
+                        <canvas id="speciesStatusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sightings Trend Chart -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Sightings Trend (Last 6 Months)</h5>
+                    <div class="chart-container" style="position: relative; height: 300px;">
+                        <canvas id="sightingsTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Achievement Distribution Chart -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Achievement Distribution</h5>
+                    <div class="chart-container" style="position: relative; height: 300px;">
+                        <canvas id="achievementChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Progress Chart -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Student Progress Overview</h5>
+                    <div class="chart-container" style="position: relative; height: 300px;">
+                        <canvas id="studentProgressChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Chart color schemes
+const chartColors = {
+    status: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+    sightings: {
+        verified: '#4BC0C0',
+        pending: '#FFCE56',
+        rejected: '#FF6384'
+    },
+    achievements: ['#36A2EB', '#4BC0C0'],
+    progress: ['#4BC0C0', '#E7E9ED']
+};
+
+// Common chart options
+const commonOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: {
+            position: 'bottom'
+        }
+    }
+};
+
+// Initialize charts after DOM content is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Species Status Chart
+    fetch('/api/analytics/species-status')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error loading species status data:', data.error);
+                return;
+            }
+            const ctx = document.getElementById('speciesStatusChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.data,
+                        backgroundColor: chartColors.status,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading species status chart:', error));
+
+    // Sightings Trend Chart
+    fetch('/api/analytics/sightings-trend')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error loading sightings trend data:', data.error);
+                return;
+            }
+            const ctx = document.getElementById('sightingsTrendChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: data.datasets.map((dataset, index) => ({
+                        label: dataset.label,
+                        data: dataset.data,
+                        backgroundColor: Object.values(chartColors.sightings)[index],
+                        borderColor: Object.values(chartColors.sightings)[index],
+                        borderWidth: 1
+                    }))
+                },
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        x: {
+                            stacked: true
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading sightings trend chart:', error));
+
+    // Achievement Distribution Chart
+    fetch('/api/analytics/achievement-distribution')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error loading achievement data:', data.error);
+                return;
+            }
+            const ctx = document.getElementById('achievementChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: data.datasets.map((dataset, index) => ({
+                        label: dataset.label,
+                        data: dataset.data,
+                        backgroundColor: chartColors.achievements[index],
+                        borderColor: chartColors.achievements[index],
+                        borderWidth: 1
+                    }))
+                },
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading achievement chart:', error));
+
+    // Student Progress Chart
+    fetch('/api/analytics/student-progress')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error loading student progress data:', data.error);
+                return;
+            }
+            const ctx = document.getElementById('studentProgressChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: data.datasets.map((dataset, index) => ({
+                        label: dataset.label,
+                        data: dataset.data,
+                        backgroundColor: chartColors.progress[index],
+                        borderColor: chartColors.progress[index],
+                        borderWidth: 1
+                    }))
+                },
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = data.datasets[1].data[context.dataIndex];
+                                    const completed = data.datasets[0].data[context.dataIndex];
+                                    const percentage = ((completed / total) * 100).toFixed(1);
+                                    return `${context.dataset.label}: ${context.raw} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading student progress chart:', error));
+});
+</script>
+
+<style>
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.chart-container {
+    margin-top: 1rem;
+}
+
+.card-title {
+    color: var(--heading-color);
+    font-family: 'Space Grotesk', sans-serif;
+    margin-bottom: 0.5rem;
+}
+</style>
+{% endblock %}

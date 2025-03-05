@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Habitat Explorer{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-globe me-2 text-forest"></i>Habitat Explorer</h2>
+            <p class="lead">Explore different habitats and learn about the species that call them home!</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Rainforest Habitat -->
+        <div class="col-md-4">
+            <div class="card h-100 hover-shadow">
+                <div class="card-body">
+                    <h4 class="card-title">
+                        <i class="fas fa-tree me-2 text-forest"></i>Tropical Rainforest
+                    </h4>
+                    <p class="card-text mb-4">Explore the dense, diverse rainforests of Indonesia and their inhabitants.</p>
+                    <div class="species-list">
+                        {% for species in species if species.habitat == "Tropical forests of Sumatra" 
+                           or species.habitat == "Tropical rainforest" %}
+                        <div class="species-item">
+                            <i class="fas fa-paw me-2 text-forest"></i>{{ species.name }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Marine Habitat -->
+        <div class="col-md-4">
+            <div class="card h-100 hover-shadow">
+                <div class="card-body">
+                    <h4 class="card-title">
+                        <i class="fas fa-water me-2 text-ocean"></i>Marine Ecosystem
+                    </h4>
+                    <p class="card-text mb-4">Discover the rich marine life in Indonesia's coral reefs and coastal waters.</p>
+                    <div class="species-list">
+                        {% for species in species if species.habitat == "Coral reefs and coastal waters" 
+                           or species.habitat == "Tropical and subtropical oceans" %}
+                        <div class="species-item">
+                            <i class="fas fa-fish me-2 text-ocean"></i>{{ species.name }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mangrove Habitat -->
+        <div class="col-md-4">
+            <div class="card h-100 hover-shadow">
+                <div class="card-body">
+                    <h4 class="card-title">
+                        <i class="fas fa-seedling me-2 text-earth"></i>Mangrove Forest
+                    </h4>
+                    <p class="card-text mb-4">Learn about the unique ecosystem where land meets sea.</p>
+                    <div class="species-list">
+                        {% for species in species if species.habitat == "Mangrove forests and swamps" %}
+                        <div class="species-item">
+                            <i class="fas fa-leaf me-2 text-earth"></i>{{ species.name }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">Habitat Health Indicators</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="card bg-forest text-white hover-lift">
+                                <div class="card-body">
+                                    <h5 class="mb-3">Biodiversity Index</h5>
+                                    <p class="display-4 mb-2">{{ species|length }}</p>
+                                    <p class="mb-0">Total Species Tracked</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-warning text-dark hover-lift">
+                                <div class="card-body">
+                                    <h5 class="mb-3">Endangered Status</h5>
+                                    <p class="display-4 mb-2">
+                                        {{ species|selectattr('conservation_status', 'equalto', 'Critically Endangered')|list|length }}
+                                    </p>
+                                    <p class="mb-0">Critically Endangered Species</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-ocean text-white hover-lift">
+                                <div class="card-body">
+                                    <h5 class="mb-3">Conservation Efforts</h5>
+                                    <p class="display-4 mb-2">Active</p>
+                                    <p class="mb-0">Protection Status</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.text-forest {
+    color: var(--color-forest);
+}
+.text-ocean {
+    color: var(--color-ocean);
+}
+.text-earth {
+    color: var(--color-earth);
+}
+.bg-forest {
+    background: var(--color-forest) !important;
+}
+.bg-ocean {
+    background: var(--color-ocean) !important;
+}
+.hover-shadow {
+    transition: all var(--transition-speed) ease;
+}
+.hover-shadow:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+.hover-lift {
+    transition: all var(--transition-speed) ease;
+}
+.hover-lift:hover {
+    transform: translateY(-2px);
+}
+.species-list {
+    border-top: 1px solid var(--border-color);
+    padding-top: var(--spacing-unit);
+}
+.species-item {
+    padding: calc(var(--spacing-unit) * 0.5) 0;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+.species-item:last-child {
+    border-bottom: none;
+}
+.display-4 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+}
+
+/* Card Styles */
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+}
+
+.card-header {
+    background: var(--section-bg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.card-body {
+    color: var(--text-primary);
+}
+
+.card-title {
+    color: var(--heading-color);
+}
+
+/* Text styles */
+.lead {
+    color: var(--text-muted);
+}
+
+.card-text {
+    color: var(--text-primary);
+}
+</style>
+{% endblock %}

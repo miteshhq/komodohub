@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Population Trends Analysis{% endblock %}
+
+{% block head %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Population Trends Analysis</h1>
+            <p class="lead">Track and analyze species population changes over time</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Population Trends Chart -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Species Population Trends</h5>
+                    <div id="chartError" class="alert alert-danger d-none">
+                        Error loading chart data. Please try again later.
+                    </div>
+                    <div class="chart-container" style="position: relative; height: 400px;">
+                        <canvas id="populationTrendsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Population Statistics -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Population Statistics</h5>
+                    <div id="statsError" class="alert alert-danger d-none">
+                        Error loading statistics. Please try again later.
+                    </div>
+                    <div id="populationStats" class="mt-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading statistics...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Changes -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Population Changes</h5>
+                    <div id="changesError" class="alert alert-danger d-none">
+                        Error loading recent changes. Please try again later.
+                    </div>
+                    <div id="recentChanges" class="mt-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading changes...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Configure Chart.js defaults
+    Chart.defaults.font.family = "'Inter', -apple-system, system-ui, sans-serif";
+    Chart.defaults.color = '#666';
+    Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+
+    let chart = null;
+
+    // Fetch population data
+    fetch('/api/analytics/population-data')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            // Check if we have data
+            if (!data.labels || !data.datasets || data.labels.length === 0) {
+                throw new Error('No population data available');
+            }
+
+            const ctx = document.getElementById('populationTrendsChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: data.datasets.map(dataset => ({
+                        ...dataset,
+                        tension: 0.4
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Population Count'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Update statistics
+            updateStatistics(data);
+        })
+        .catch(error => {
+            console.error('Error loading population trends chart:', error);
+            document.getElementById('chartError').classList.remove('d-none');
+            document.getElementById('statsError').classList.remove('d-none');
+            document.getElementById('changesError').classList.remove('d-none');
+
+            // Clear loading spinners
+            document.getElementById('populationStats').innerHTML = 'Failed to load statistics.';
+            document.getElementById('recentChanges').innerHTML = 'Failed to load recent changes.';
+        });
+});
+
+// Update statistics section
+function updateStatistics(data) {
+    const statsDiv = document.getElementById('populationStats');
+    const recentDiv = document.getElementById('recentChanges');
+
+    try {
+        // Calculate basic statistics for each species
+        const stats = data.datasets.map(dataset => {
+            const values = dataset.data.filter(val => val !== null);
+            const latest = values[values.length - 1];
+            const previous = values[values.length - 2] || 0;
+            const change = previous ? ((latest - previous) / previous * 100).toFixed(1) : '0.0';
+
+            return `
+                <div class="mb-3">
+                    <h6 class="mb-2">${dataset.label}</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span>Current Population:</span>
+                        <strong>${latest?.toLocaleString() || 'N/A'}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Change:</span>
+                        <span class="${change >= 0 ? 'text-success' : 'text-danger'}">
+                            <i class="fas fa-${change >= 0 ? 'arrow-up' : 'arrow-down'} me-1"></i>
+                            ${Math.abs(change)}%
+                        </span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        statsDiv.innerHTML = stats || '<div class="text-muted">No statistics available</div>';
+
+        // Show recent significant changes
+        const recentChanges = data.datasets
+            .map(dataset => {
+                const values = dataset.data.filter(val => val !== null);
+                const latest = values[values.length - 1];
+                const previous = values[values.length - 2] || 0;
+                const change = previous ? ((latest - previous) / previous * 100).toFixed(1) : '0.0';
+
+                return {
+                    species: dataset.label,
+                    change: parseFloat(change),
+                    date: data.labels[data.labels.length - 1]
+                };
+            })
+            .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))
+            .slice(0, 5)
+            .map(item => `
+                <div class="mb-2 d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>${item.species}</strong>
+                        <small class="text-muted d-block">${item.date}</small>
+                    </div>
+                    <span class="${item.change >= 0 ? 'text-success' : 'text-danger'}">
+                        <i class="fas fa-${item.change >= 0 ? 'arrow-up' : 'arrow-down'} me-1"></i>
+                        ${Math.abs(item.change)}%
+                    </span>
+                </div>
+            `).join('');
+
+        recentDiv.innerHTML = recentChanges || '<div class="text-muted">No recent changes</div>';
+    } catch (error) {
+        console.error('Error updating statistics:', error);
+        statsDiv.innerHTML = '<div class="text-danger">Error processing statistics</div>';
+        recentDiv.innerHTML = '<div class="text-danger">Error processing recent changes</div>';
+    }
+}
+</script>
+
+<style>
+.chart-container {
+    margin-top: 1rem;
+    background: var(--bs-light);
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.card-title {
+    color: var(--heading-color);
+    font-family: 'Space Grotesk', sans-serif;
+    margin-bottom: 1rem;
+}
+
+.spinner-border {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+</style>
+{% endblock %}

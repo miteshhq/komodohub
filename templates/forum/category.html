@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} - Forum{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('forum.index') }}">Forum</a></li>
+            <li class="breadcrumb-item active">{{ category.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>{{ category.name }}</h1>
+            <p class="text-muted">{{ category.description }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('forum.create_thread', category_id=category.id) }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>New Thread
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="list-group list-group-flush">
+            {% for thread in threads %}
+            <div class="list-group-item">
+                <div class="d-flex w-100 justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1">
+                            {% if thread.is_pinned %}
+                            <i class="fas fa-thumbtack text-warning me-2"></i>
+                            {% endif %}
+                            <a href="{{ url_for('forum.view_thread', id=thread.id) }}" class="text-decoration-none">
+                                {{ thread.title }}
+                            </a>
+                        </h5>
+                        <p class="mb-1 text-muted">{{ thread.content[:200] }}...</p>
+                        <small class="text-muted">
+                            Posted by {{ thread.author.username }} on {{ thread.created_at.strftime('%Y-%m-%d %H:%M') }}
+                        </small>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-primary rounded-pill">
+                            <i class="fas fa-comment-alt me-1"></i>
+                            {{ thread.posts|length }}
+                        </span>
+                        {% if thread.is_locked %}
+                        <span class="badge bg-warning ms-1">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="list-group-item text-center py-4">
+                <p class="mb-0 text-muted">No threads yet. Be the first to start a discussion!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+.list-group-item:hover {
+    background-color: var(--hover-bg);
+}
+</style>
+{% endblock %}

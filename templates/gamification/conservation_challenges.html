@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Conservation Challenges{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Conservation Challenges</h1>
+            <p class="lead">Complete challenges to earn points and make a real impact on conservation efforts</p>
+        </div>
+    </div>
+
+    <!-- User Progress Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Total Points</h5>
+                    <h2 class="display-4 mb-0">{{ total_points }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Active Challenges</h5>
+                    <h2 class="display-4 mb-0">{{ user_challenges|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Completed Challenges</h5>
+                    <h2 class="display-4 mb-0">{{ completed_challenges|length }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Challenges -->
+    {% if user_challenges %}
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Your Active Challenges</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row row-cols-1 row-cols-md-3 g-4">
+                        {% for user_challenge in user_challenges %}
+                        <div class="col">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ user_challenge.conservation.title }}</h5>
+                                    <p class="card-text">{{ user_challenge.conservation.description }}</p>
+                                    {% set progress_data = user_challenge.progress_data|from_json %}
+                                    {% set requirements = user_challenge.conservation.requirements|from_json %}
+                                    {% set completion = (progress_data.steps_completed|length / requirements|length * 100)|round|int %}
+                                    <div class="progress mb-3">
+                                        <div class="progress-bar" role="progressbar" 
+                                             style="width: {{ completion }}%"
+                                             aria-valuenow="{{ completion }}" 
+                                             aria-valuemin="0" aria-valuemax="100">
+                                            {{ completion }}%
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">Started {{ user_challenge.started_at|timeago }}</small>
+                                        <a href="{{ url_for('gamification.view_challenge', challenge_id=user_challenge.id) }}" 
+                                           class="btn btn-primary btn-sm">Continue</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Available Challenges -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="mb-4">Available Challenges</h2>
+            
+            <!-- Beginner Challenges -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Beginner Challenges</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row row-cols-1 row-cols-md-3 g-4">
+                        {% for challenge in beginner_challenges %}
+                        <div class="col">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ challenge.title }}</h5>
+                                    <p class="card-text">{{ challenge.description }}</p>
+                                    <ul class="list-unstyled mb-3">
+                                        <li><i class="fas fa-clock me-2"></i>{{ challenge.duration_days }} days</li>
+                                        <li><i class="fas fa-star me-2"></i>{{ challenge.points }} points</li>
+                                    </ul>
+                                    <a href="{{ url_for('gamification.start_conservation_challenge', challenge_id=challenge.id) }}" 
+                                       class="btn btn-success">Start Challenge</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Intermediate Challenges -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0">Intermediate Challenges</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row row-cols-1 row-cols-md-3 g-4">
+                        {% for challenge in intermediate_challenges %}
+                        <div class="col">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ challenge.title }}</h5>
+                                    <p class="card-text">{{ challenge.description }}</p>
+                                    <ul class="list-unstyled mb-3">
+                                        <li><i class="fas fa-clock me-2"></i>{{ challenge.duration_days }} days</li>
+                                        <li><i class="fas fa-star me-2"></i>{{ challenge.points }} points</li>
+                                    </ul>
+                                    <a href="{{ url_for('gamification.start_conservation_challenge', challenge_id=challenge.id) }}" 
+                                       class="btn btn-warning">Start Challenge</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Challenges -->
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Advanced Challenges</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row row-cols-1 row-cols-md-3 g-4">
+                        {% for challenge in advanced_challenges %}
+                        <div class="col">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ challenge.title }}</h5>
+                                    <p class="card-text">{{ challenge.description }}</p>
+                                    <ul class="list-unstyled mb-3">
+                                        <li><i class="fas fa-clock me-2"></i>{{ challenge.duration_days }} days</li>
+                                        <li><i class="fas fa-star me-2"></i>{{ challenge.points }} points</li>
+                                    </ul>
+                                    <a href="{{ url_for('gamification.start_conservation_challenge', challenge_id=challenge.id) }}" 
+                                       class="btn btn-danger">Start Challenge</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Completed Challenges -->
+    {% if completed_challenges %}
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recently Completed Challenges</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for challenge in completed_challenges %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ challenge.conservation.title }}</h6>
+                                    <small class="text-muted">Completed {{ challenge.completed_at|timeago }}</small>
+                                </div>
+                                <span class="badge bg-success">{{ challenge.awarded_points }} points</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.progress {
+    height: 10px;
+    border-radius: 5px;
+}
+
+.list-group-item {
+    transition: background-color 0.2s;
+}
+
+.list-group-item:hover {
+    background-color: var(--bs-light);
+}
+</style>
+{% endblock %}

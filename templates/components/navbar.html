@@ -1,0 +1,145 @@
+<nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('main.dashboard') }}">
+            <i class="fas fa-dragon"></i>
+            Komodo Hub
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            {% if current_user.is_authenticated %}
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <!-- Common Navigation Items -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('species.list') }}">
+                        <i class="fas fa-paw"></i>
+                        <span>Species</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('forum.index') }}">
+                        <i class="fas fa-comments"></i>
+                        <span>Forum</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('library.resources') }}">
+                        <i class="fas fa-book"></i>
+                        <span>Library</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('species.my_sightings') }}">
+                        <i class="fas fa-binoculars"></i>
+                        <span>Sightings</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('messaging.inbox') }}">
+                        <i class="fas fa-envelope"></i>
+                        <span>Messages</span>
+                    </a>
+                </li>
+
+                <!-- Teacher Tools Dropdown -->
+                {% if current_user.role == 'teacher' %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        <span>Teacher Tools</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('gamification.conservation_challenges') }}">
+                                <i class="fas fa-trophy"></i> Manage Challenges
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('species.all_sightings') }}">
+                                <i class="fas fa-eye"></i> Verify Sightings
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('school.list_access_codes') }}">
+                                <i class="fas fa-key"></i> Access Codes
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('progress.student_list') }}">
+                                <i class="fas fa-chart-line"></i> Student Progress
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('analytics.dashboard') }}">
+                                <i class="fas fa-chart-bar"></i> Analytics
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                {% endif %}
+
+                <!-- Student Tools Dropdown -->
+                {% if current_user.role == 'student' %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>Student Tools</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('gamification.conservation_challenges') }}">
+                                <i class="fas fa-trophy"></i> Challenges
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('progress.view_progress', student_id=current_user.id) }}">
+                                <i class="fas fa-tasks"></i> My Progress
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('education.resources') }}">
+                                <i class="fas fa-book-reader"></i> Learning Materials
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                {% endif %}
+            </ul>
+
+            <!-- Right Side Navigation (User Info & Controls) -->
+            <ul class="navbar-nav align-items-center">
+                <li class="nav-item me-3">
+                    <button class="btn" id="themeToggle">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </li>
+                {% if current_user.is_authenticated %}
+                <li class="nav-item me-3">
+                    <div class="d-flex align-items-center">
+                        <a class="nav-link text-nowrap d-flex align-items-center" href="{{ url_for('profile.customize') }}">
+                            <i class="fas fa-user me-2"></i>
+                            <span>{{ current_user.username }}</span>
+                            <span class="badge bg-primary ms-2">{{ current_user.role|title }}</span>
+                        </a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="btn btn-danger" href="{{ url_for('auth.logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i>
+                        Logout
+                    </a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('auth.register') }}">Register</a>
+                </li>
+                {% endif %}
+            </ul>
+            {% endif %}
+        </div>
+    </div>
+</nav>

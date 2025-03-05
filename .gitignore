@@ -1,0 +1,41 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+
+# Environment variables
+*.env
+*.venv
+.env.local
+.env.*.local
+
+# Flask instance and cache
+instance/
+.cache/
+
+# Database
+*.sqlite3
+*.db
+*.sqlite
+migrations/
+
+# Logs
+logs/
+*.log
+nohup.out
+
+# Python packaging
+*.egg-info/
+dist/
+build/
+
+# VS Code settings
+.vscode/
+
+# MacOS and Linux system files
+.DS_Store
+*.swp

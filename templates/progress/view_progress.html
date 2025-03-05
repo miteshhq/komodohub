@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}{{ student.username }}'s Progress{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Progress for {{ student.username }}</h1>
+            <p class="lead">Overall Progress: {{ student.get_progress_percentage() }}%</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Educational Resources Progress</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Resource</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for resource in resources %}
+                                <tr>
+                                    <td>{{ resource.title }}</td>
+                                    <td>
+                                        {% set progress = progress_data|selectattr("content_type", "equalto", "resource")|selectattr("content_id", "equalto", resource.id)|first %}
+                                        {% if progress and progress.completed %}
+                                        <span class="badge bg-success">Completed</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">In Progress</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('progress.update_progress', student_id=student.id) }}" class="d-inline">
+                                            <input type="hidden" name="content_type" value="resource">
+                                            <input type="hidden" name="content_id" value="{{ resource.id }}">
+                                            <input type="hidden" name="completed" value="{{ 'false' if progress and progress.completed else 'true' }}">
+                                            <button type="submit" class="btn btn-sm btn-{{ 'warning' if progress and progress.completed else 'success' }}">
+                                                {{ 'Mark Incomplete' if progress and progress.completed else 'Mark Complete' }}
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Species Knowledge Progress</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Species</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for species in species %}
+                                <tr>
+                                    <td>{{ species.name }}</td>
+                                    <td>
+                                        {% set progress = progress_data|selectattr("content_type", "equalto", "species")|selectattr("content_id", "equalto", species.id)|first %}
+                                        {% if progress and progress.completed %}
+                                        <span class="badge bg-success">Completed</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">In Progress</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('progress.update_progress', student_id=student.id) }}" class="d-inline">
+                                            <input type="hidden" name="content_type" value="species">
+                                            <input type="hidden" name="content_id" value="{{ species.id }}">
+                                            <input type="hidden" name="completed" value="{{ 'false' if progress and progress.completed else 'true' }}">
+                                            <button type="submit" class="btn btn-sm btn-{{ 'warning' if progress and progress.completed else 'success' }}">
+                                                {{ 'Mark Incomplete' if progress and progress.completed else 'Mark Complete' }}
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

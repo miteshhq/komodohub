@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}{{ thread.title }} - Forum{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('forum.index') }}">Forum</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('forum.view_category', id=thread.category.id) }}">{{ thread.category.name }}</a></li>
+            <li class="breadcrumb-item active">{{ thread.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="h4 mb-0">
+                    {% if thread.is_pinned %}
+                    <i class="fas fa-thumbtack text-warning me-2"></i>
+                    {% endif %}
+                    {{ thread.title }}
+                </h2>
+                <small class="text-muted">
+                    Posted by {{ thread.author.username }} on {{ thread.created_at.strftime('%Y-%m-%d %H:%M') }}
+                </small>
+            </div>
+            {% if current_user.role == 'teacher' %}
+            <div class="btn-group">
+                <form method="POST" action="{{ url_for('forum.toggle_pin_thread', id=thread.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-outline-warning btn-sm">
+                        {% if thread.is_pinned %}
+                        <i class="fas fa-thumbtack me-1"></i>Unpin
+                        {% else %}
+                        <i class="fas fa-thumbtack me-1"></i>Pin
+                        {% endif %}
+                    </button>
+                </form>
+                <form method="POST" action="{{ url_for('forum.toggle_lock_thread', id=thread.id) }}" class="d-inline ms-2">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                        {% if thread.is_locked %}
+                        <i class="fas fa-lock-open me-1"></i>Unlock
+                        {% else %}
+                        <i class="fas fa-lock me-1"></i>Lock
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <div class="thread-content">
+                {{ thread.content | safe }}
+            </div>
+        </div>
+        <div class="card-footer text-muted">
+            <i class="fas fa-eye me-1"></i>{{ thread.view_count }} views
+        </div>
+    </div>
+
+    <!-- Replies -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="h5 mb-0">Replies</h3>
+        </div>
+        <div class="list-group list-group-flush">
+            {% for post in posts %}
+            <div class="list-group-item" id="post-{{ post.id }}">
+                <div class="d-flex w-100 justify-content-between align-items-start mb-2">
+                    <div class="user-info">
+                        <strong>{{ post.author.username }}</strong>
+                        <small class="text-muted">{{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                    </div>
+                    {% if post.is_solution %}
+                    <span class="badge bg-success">
+                        <i class="fas fa-check me-1"></i>Solution
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="post-content">
+                    {{ post.content | safe }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if not thread.is_locked or current_user.role == 'teacher' %}
+    <div class="card mt-4">
+        <div class="card-body">
+            <h4>Add Reply</h4>
+            <form method="POST" action="{{ url_for('forum.reply_thread', id=thread.id) }}">
+                {{ form.hidden_tag() }}
+                <div class="mb-3">
+                    {{ form.content.label(class="form-label") }}
+                    {{ form.content(class="form-control", rows=5) }}
+                    {% if form.content.errors %}
+                        {% for error in form.content.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <button type="submit" class="btn btn-primary">Post Reply</button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-warning mt-4">
+        <i class="fas fa-lock me-2"></i>This thread is locked. No new replies can be added.
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.thread-content, .post-content {
+    white-space: pre-wrap;
+}
+.user-info {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+</style>
+{% endblock %}

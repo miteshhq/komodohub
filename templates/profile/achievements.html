@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}My Achievements{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>My Achievements</h1>
+            <p class="lead">Track your progress and accomplishments in conservation efforts!</p>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for achievement in achievements %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <img src="{{ url_for('static', filename=achievement.badge_image) }}" 
+                         alt="{{ achievement.title }}" class="mb-3" style="width: 100px;">
+                    <h5 class="card-title">{{ achievement.title }}</h5>
+                    <p class="card-text">{{ achievement.description }}</p>
+                    <p class="text-muted">Earned {{ achievement.points }} points</p>
+                    <small class="text-muted">Achieved on {{ achievement.achieved_at.strftime('%Y-%m-%d') }}</small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

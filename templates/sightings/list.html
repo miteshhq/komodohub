@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Species Sightings{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Species Sightings</h1>
+            <a href="{{ url_for('sightings.report_sighting') }}" class="btn btn-primary">Report New Sighting</a>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for sighting in sightings %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ sighting.species.name }}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">{{ sighting.sighting_date.strftime('%Y-%m-%d') }}</h6>
+                    <p class="card-text">
+                        <strong>Location:</strong> {{ sighting.location }}<br>
+                        <strong>Status:</strong> 
+                        {% if sighting.status == 'pending' %}
+                            <span class="badge bg-warning">Pending Verification</span>
+                        {% elif sighting.status == 'verified' %}
+                            <span class="badge bg-success">Verified</span>
+                        {% else %}
+                            <span class="badge bg-danger">Rejected</span>
+                        {% endif %}
+                        <br>
+                        <strong>Reported by:</strong> {{ sighting.observer.username }}
+                    </p>
+                    <a href="{{ url_for('sightings.view_sighting', id=sighting.id) }}" class="btn btn-info">View Details</a>
+
+                    {% if current_user.role == 'teacher' and sighting.status == 'pending' %}
+                    <form method="POST" action="{{ url_for('sightings.verify_sighting', id=sighting.id) }}" class="mt-2">
+                        <button type="submit" name="action" value="verify" class="btn btn-success btn-sm">Verify</button>
+                        <button type="submit" name="action" value="reject" class="btn btn-danger btn-sm">Reject</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

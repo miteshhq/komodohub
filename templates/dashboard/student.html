@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-user-graduate me-2"></i>Welcome, {{ current_user.username }}!</h2>
+        <p class="text-muted lead">Track your progress and continue learning about conservation.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h4 class="card-title">Learning Progress</h4>
+                <div class="progress mb-3" style="height: 20px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" 
+                         style="width: {{ current_user.get_progress_percentage() }}%">
+                        {{ current_user.get_progress_percentage() }}%
+                    </div>
+                </div>
+                <p class="mb-3">Keep exploring to increase your knowledge!</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ url_for('education.resources') }}" class="btn btn-primary">
+                        <i class="fas fa-book me-2"></i>Continue Learning
+                    </a>
+                    <a href="{{ url_for('games.species_quiz') }}" class="btn btn-success">
+                        <i class="fas fa-question-circle me-2"></i>Take a Quiz
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h4 class="card-title">My Programs</h4>
+                {% if current_user.programs_joined %}
+                <div class="list-group">
+                    {% for program in current_user.programs_joined %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ program.title }}</h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-map-marker-alt me-1"></i>{{ program.location }}
+                                </small>
+                            </div>
+                            <div class="btn-group">
+                                <a href="{{ url_for('programs.list') }}#programModal{{ program.id }}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-info-circle"></i>
+                                </a>
+                                <form action="{{ url_for('programs.leave_program', program_id=program.id) }}" 
+                                      method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-3">
+                    <a href="{{ url_for('programs.list') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i>Join More Programs
+                    </a>
+                </div>
+                {% else %}
+                <p class="text-muted">You haven't joined any programs yet.</p>
+                <a href="{{ url_for('programs.list') }}" class="btn btn-primary">
+                    <i class="fas fa-search me-1"></i>Browse Programs
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Educational Activities</h4>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h5><i class="fas fa-question-circle text-white me-2"></i>Species Quiz</h5>
+                                <p>Test your knowledge about endangered species</p>
+                                <a href="{{ url_for('games.species_quiz') }}" class="btn btn-light">
+                                    Start Quiz
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h5><i class="fas fa-globe text-white me-2"></i>Virtual Tours</h5>
+                                <p>Explore habitats virtually</p>
+                                <a href="{{ url_for('games.habitat_explorer') }}" class="btn btn-light">
+                                    Start Tour
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <h5><i class="fas fa-gamepad text-white me-2"></i>Conservation Games</h5>
+                                <p>Learn while playing</p>
+                                <a href="{{ url_for('games.conservation_quiz') }}" class="btn btn-light">
+                                    Play Now
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

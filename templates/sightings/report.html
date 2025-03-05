@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Report Sighting{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Report Species Sighting</h2>
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            {{ form.species_id.label(class="form-label") }}
+                            {{ form.species_id(class="form-select") }}
+                            {% if form.species_id.errors %}
+                                {% for error in form.species_id.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Location</label>
+                                <div id="map" style="height: 300px;" class="mb-2"></div>
+                                <small class="text-muted">Click on the map to set the location or use the search box below</small>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                {{ form.location.label(class="form-label") }}
+                                {{ form.location(class="form-control", placeholder="Enter location or search on map") }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3" style="display: none;">
+                            <div class="col-md-6">
+                                {{ form.latitude(class="form-control") }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.longitude(class="form-control") }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.sighting_date.label(class="form-label") }}
+                            {{ form.sighting_date(class="form-control", type="date") }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control", rows=4) }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.habitat_notes.label(class="form-label") }}
+                            <small class="text-muted d-block mb-2">{{ form.habitat_notes.description }}</small>
+                            {{ form.habitat_notes(class="form-control", rows=3) }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.behavior_notes.label(class="form-label") }}
+                            <small class="text-muted d-block mb-2">{{ form.behavior_notes.description }}</small>
+                            {{ form.behavior_notes(class="form-control", rows=3) }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.photos.label(class="form-label") }}
+                            <small class="text-muted d-block mb-2">{{ form.photos.description }}</small>
+                            {{ form.photos(class="form-control") }}
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Submit Sighting</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize map
+    var map = L.map('map').setView([0, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    var marker;
+
+    // Handle map clicks
+    map.on('click', function(e) {
+        if (marker) {
+            map.removeLayer(marker);
+        }
+        marker = L.marker(e.latlng).addTo(map);
+
+        // Update form fields
+        document.getElementById('latitude').value = e.latlng.lat;
+        document.getElementById('longitude').value = e.latlng.lng;
+
+        // Reverse geocode to get location name
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${e.latlng.lat}&lon=${e.latlng.lng}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('location').value = data.display_name;
+            });
+    });
+
+    // Handle location search
+    var locationInput = document.getElementById('location');
+    locationInput.addEventListener('change', function() {
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${this.value}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.length > 0) {
+                    var location = data[0];
+                    if (marker) {
+                        map.removeLayer(marker);
+                    }
+                    marker = L.marker([location.lat, location.lon]).addTo(map);
+                    map.setView([location.lat, location.lon], 13);
+
+                    // Update form fields
+                    document.getElementById('latitude').value = location.lat;
+                    document.getElementById('longitude').value = location.lon;
+                }
+            });
+    });
+});
+</script>
+{% endblock %}

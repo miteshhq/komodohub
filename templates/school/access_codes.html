@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Access Codes{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>School Access Codes</h1>
+            <p class="lead">Manage your student registration access codes</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('school.generate_access_code') }}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i>Generate New Code
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Active Codes</h3>
+                </div>
+                <div class="card-body">
+                    {% if active_codes %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Description</th>
+                                    <th>Uses</th>
+                                    <th>Expires</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for code in active_codes %}
+                                <tr>
+                                    <td><code>{{ code.code }}</code></td>
+                                    <td>{{ code.description or 'No description' }}</td>
+                                    <td>{{ code.times_used }}/{{ code.max_uses or '∞' }}</td>
+                                    <td>{{ code.expires_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('school.deactivate_access_code', id=code.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-warning" 
+                                                    onclick="return confirm('Are you sure you want to deactivate this code?')">
+                                                Deactivate
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No active access codes found.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Expired/Inactive Codes</h3>
+                </div>
+                <div class="card-body">
+                    {% if expired_codes %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Description</th>
+                                    <th>Uses</th>
+                                    <th>Expired On</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for code in expired_codes %}
+                                <tr class="text-muted">
+                                    <td><code>{{ code.code }}</code></td>
+                                    <td>{{ code.description or 'No description' }}</td>
+                                    <td>{{ code.times_used }}/{{ code.max_uses or '∞' }}</td>
+                                    <td>{{ code.expires_at.strftime('%Y-%m-%d') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No expired access codes found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

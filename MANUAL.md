@@ -5,7 +5,7 @@
 Run the following commands to install the required Python packages:
 
 ```bash
-pip install flask==3.0.0 flask-login flask-sqlalchemy==3.1.1 flask-wtf==1.2.1 gunicorn==21.2.0 sqlalchemy==2.0.23 email-validator==2.1.0.post1 werkzeug==3.0.1 wtforms==3.1.1 python-dotenv
+pip install flask flask-login flask-sqlalchemy flask-wtf gunicorn sqlalchemy email-validator.post1 werkzeug wtforms python-dotenv
 ```
 
 ## 2. Database Setup (SQLite)
@@ -32,6 +32,12 @@ ADMIN_PASS=adminkomodo
 
   ```bash
   flask run
+  ```
+  
+  or try running
+
+  ```bash
+  python -m flask run
   ```
 
 - Open in your browser: [http://localhost:5000](http://localhost:5000)
@@ -74,6 +80,12 @@ Use the following credentials to test different roles in the application:
 - **Email:** <student@komodohub.org>
 - **Password:** password123
 - **Role:** Student
+
+#### Member Account
+
+- **Email:** <member@komodohub.org>
+- **Password:** password123
+- **Role:** Member
 
 #### Admin Account
 
